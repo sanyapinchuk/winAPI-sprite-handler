@@ -149,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 		{
 			x = newX + bitWidth <= userInnerWindow.right ? newX : userInnerWindow.right - bitWidth;
 		}
-		//InvalidateRect(hWnd, NULL, TRUE);
+		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
 	case WM_MOUSEWHEEL:
@@ -178,7 +178,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 				y = y + bitHeight + speed <= userInnerWindow.bottom ? y + speed : userInnerWindow.bottom - bitHeight;
 			}
 		}
-		//InvalidateRect(hWnd, NULL, TRUE);
+		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
 	case WM_CHAR:
@@ -222,7 +222,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			default:
 				break;
 		}
-		//InvalidateRect(hWnd, NULL, TRUE);
+		InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
 	case WM_KEYDOWN:
@@ -254,7 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			default:
 				break;
 		}
-		//InvalidateRect(hWnd, NULL, TRUE);
+		InvalidateRect(hWnd, NULL, TRUE);
 		//InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
