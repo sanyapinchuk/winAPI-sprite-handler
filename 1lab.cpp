@@ -144,6 +144,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			x = newX + bitWidth <= userInnerWindow.right ? newX : userInnerWindow.right - bitWidth;
 		}
 	}
+	case WM_MOUSEWHEEL:
+	{
+		int mouseDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (LOWORD(wParam) == MK_SHIFT)
+		{
+			if (mouseDelta > 0)
+			{
+				x = x - speed >= 0 ? x - speed : 0;
+			}
+			else
+			{
+				x = x + bitWidth + speed <= userInnerWindow.right ? x + speed : userInnerWindow.right - bitWidth;
+			}
+		}
+		else
+		{
+			if (mouseDelta > 0)
+			{
+				y = y - speed >= 0 ? y - speed : 0;
+			}
+			else
+			{
+				y = y + bitHeight + speed <= userInnerWindow.bottom ? y + speed : userInnerWindow.bottom - bitHeight;
+			}
+		}
+		
+	}
 	case WM_CHAR:
 	{
 		GetClientRect(hWnd, &userInnerWindow);
