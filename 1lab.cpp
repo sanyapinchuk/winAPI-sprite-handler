@@ -19,11 +19,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 void drawImage(HDC hdc, int x, int y, HBITMAP hBitmap);
 
-FILE* myfile;
 
 const int WINDOWHEIGHT = 600;
 const int WINDOWWIDTH = 800;
 
+static int bitWidth;
+static int bitHeight;
+
+WCHAR imagePath[] = L"bober.png";
+//WCHAR imagePath[] = L"flag.png";
 
 int WINAPI WinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance, LPSTR IpCmdLine, int nCmdShow)
@@ -42,8 +46,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	wcex.lpszClassName = L"HelloWorldClass";
 	wcex.hIconSm = wcex.hIcon;
 
-	myfile = fopen("hello.txt", "w+");
-
 	RegisterClassEx(&wcex);
 	hWnd = CreateWindow(L"HelloWorldClass", L"Hello, World!",
 		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
@@ -55,7 +57,6 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	fclose(myfile);
 	return (int)msg.wParam;
 }
 
@@ -67,26 +68,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 	HDC hdc;
 	static RECT userInnerWindow;
 	static int id = DRAWBIT;
-
-	static const HBRUSH BACKGROUND_BRUSH = CreateSolidBrush(RGB(175, 238, 238));
+	//Color gdipColor(255, 0, 0, 255);
+	//SetBkMode(hdc, TRANSPARENT);
+	static const HBRUSH BACKGROUND_BRUSH = CreateSolidBrush(RGB(0,0,0));
 	static const HBRUSH RECT_BRUSH = CreateSolidBrush(RGB(229, 255, 204));
 	static const HPEN RECT_PEN = CreatePen(PS_SOLID, 1, RGB(0, 153, 0));
+
+	
 
 	static int x = 200;
 	static int y = 200;
 	//static int size = 10;
 	static int speed = 10;
 
-	static int bitWidth = 64;
-	static int bitHeight = 43;
+	static bool autoMoving = false;
+	static int autoSpeedX = 10;
+	static int autoSpeedY = 10;
 
 	//static int bitWidth = 100;
 	//static int bitHeight = 100;
 
 	static HBRUSH hbrush;
 	static HPEN hpen;
-
-	WCHAR imagePath[] = L"flag.png";
 	static HBITMAP spriteBitmap;
 
 
@@ -116,10 +119,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			drawImage(hdc, x, y, spriteBitmap);
 		}
 		EndPaint(hWnd, &ps);
+		//InvalidateRect(hWnd, NULL, TRUE);
 		break;
 
 	}
-	case WM_MOUSEMOVE:	{
+	case WM_MOUSEMOVE:
+	{
+		autoMoving = false;
 		GetClientRect(hWnd, &userInnerWindow);
 		int newX = LOWORD(lParam);
 		int newY = HIWORD(lParam);
@@ -143,9 +149,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 		{
 			x = newX + bitWidth <= userInnerWindow.right ? newX : userInnerWindow.right - bitWidth;
 		}
+		//InvalidateRect(hWnd, NULL, TRUE);
+		break;
 	}
 	case WM_MOUSEWHEEL:
 	{
+		autoMoving = false;
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		if (LOWORD(wParam) == MK_SHIFT)
 		{
@@ -169,10 +178,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 				y = y + bitHeight + speed <= userInnerWindow.bottom ? y + speed : userInnerWindow.bottom - bitHeight;
 			}
 		}
-		
+		//InvalidateRect(hWnd, NULL, TRUE);
+		break;
 	}
 	case WM_CHAR:
 	{
+		autoMoving = false;
 		GetClientRect(hWnd, &userInnerWindow);
 		switch (wParam)
 		{
@@ -211,9 +222,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			default:
 				break;
 		}
+		//InvalidateRect(hWnd, NULL, TRUE);
+		break;
 	}
 	case WM_KEYDOWN:
 	{
+		autoMoving = false;
 		GetClientRect(hWnd, &userInnerWindow);
 		switch (wParam)
 		{
@@ -240,10 +254,45 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 			default:
 				break;
 		}
-		InvalidateRect(hWnd, NULL, TRUE);
+		//InvalidateRect(hWnd, NULL, TRUE);
+		//InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
-	case WM_LBUTTONDBLCLK:
+	/*case WM_TIMER:
+	{
+		if (autoMoving) 
+		{
+			GetClientRect(hWnd, &userInnerWindow);
+
+			if (x + autoSpeedX + bitWidth < userInnerWindow.right)
+			{
+				x = x + autoSpeedX;
+			}
+			else
+			{
+				x = x - autoSpeedX;
+				autoSpeedX *= -1;
+			}
+
+			if (y + autoSpeedY + bitHeight < userInnerWindow.bottom)
+			{
+				y = y + autoSpeedY;
+			}
+			else
+			{
+				y = y - autoSpeedY;
+				autoSpeedY *= -1;
+			}
+		}
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	}*/
+	case WM_LBUTTONDOWN:
+	{
+		autoMoving = true; 
+
+		break;
+	}
 
 		break;
 	case WM_DESTROY:
@@ -295,12 +344,15 @@ HBITMAP PngToBitmap(WCHAR* imagePath) {
 	GdiplusStartupInput test;
 	ULONG_PTR token;
 	GdiplusStartup(&token, &test, NULL);
-	Color Back = Color(Color::MakeARGB(0, 175, 238, 238));
+	Color backgroundImage = Color(Color::MakeARGB(0, 255,255,255));
 
 	HBITMAP convertedBitmap = NULL;
 	Bitmap* Bitmap = Bitmap::FromFile(imagePath, false);
+	
 	if (Bitmap) {
-		Bitmap->GetHBITMAP(Back, &convertedBitmap);
+		bitWidth = Bitmap->GetWidth();
+		bitHeight = Bitmap->GetHeight();
+		Bitmap->GetHBITMAP(backgroundImage, &convertedBitmap);
 		delete Bitmap;
 	}
 	GdiplusShutdown(token);
