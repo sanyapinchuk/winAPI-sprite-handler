@@ -123,9 +123,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 		break;
 
 	}
+	case WM_TIMER:
+	{
+		if (autoMoving)
+		{
+			GetClientRect(hWnd, &userInnerWindow);
+
+			if (x + autoSpeedX + bitWidth < userInnerWindow.right)
+			{
+				if (x + autoSpeedX > 0)
+				{
+					x = x + autoSpeedX;
+				}
+				else
+				{
+					x = x - autoSpeedX;
+					autoSpeedX *= -1;
+				}
+			}
+			else
+			{
+				x = x - autoSpeedX;
+				autoSpeedX *= -1;
+			}
+
+			if (y + autoSpeedY + bitHeight < userInnerWindow.bottom)
+			{
+				if (y + autoSpeedY > 0)
+				{
+					y = y + autoSpeedY;
+				}
+				else
+				{
+					y = y - autoSpeedY;
+					autoSpeedY *= -1;
+				}
+			}
+			else
+			{
+				y = y - autoSpeedY;
+				autoSpeedY *= -1;
+			}
+		}
+		InvalidateRect(hWnd, NULL, TRUE);
+		break;
+	}
 	case WM_MOUSEMOVE:
 	{
-		autoMoving = false;
+		if (autoMoving)
+			break;
 		GetClientRect(hWnd, &userInnerWindow);
 		int newX = LOWORD(lParam);
 		int newY = HIWORD(lParam);
@@ -154,7 +200,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 	}
 	case WM_MOUSEWHEEL:
 	{
-		autoMoving = false;
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		if (LOWORD(wParam) == MK_SHIFT)
 		{
@@ -184,6 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 	case WM_CHAR:
 	{
 		autoMoving = false;
+		KillTimer(hWnd, 1);
 		GetClientRect(hWnd, &userInnerWindow);
 		switch (wParam)
 		{
@@ -228,6 +274,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 	case WM_KEYDOWN:
 	{
 		autoMoving = false;
+		KillTimer(hWnd, 1);
 		GetClientRect(hWnd, &userInnerWindow);
 		switch (wParam)
 		{
@@ -258,44 +305,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 		//InvalidateRect(hWnd, NULL, TRUE);
 		break;
 	}
-	/*case WM_TIMER:
-	{
-		if (autoMoving) 
-		{
-			GetClientRect(hWnd, &userInnerWindow);
-
-			if (x + autoSpeedX + bitWidth < userInnerWindow.right)
-			{
-				x = x + autoSpeedX;
-			}
-			else
-			{
-				x = x - autoSpeedX;
-				autoSpeedX *= -1;
-			}
-
-			if (y + autoSpeedY + bitHeight < userInnerWindow.bottom)
-			{
-				y = y + autoSpeedY;
-			}
-			else
-			{
-				y = y - autoSpeedY;
-				autoSpeedY *= -1;
-			}
-		}
-		InvalidateRect(hWnd, NULL, TRUE);
-		break;
-	}*/
+	
 	case WM_LBUTTONDOWN:
 	{
-		autoMoving = true; 
+		if (!autoMoving)
+		{
+			autoMoving = true;
+			SetTimer(hWnd, 1, 25, NULL);
+		}
+		else
+		{
+			autoMoving = false;
+			KillTimer(hWnd, 1);
+		}	
 
 		break;
 	}
 
 		break;
 	case WM_DESTROY:
+		if (autoMoving) 
+		{
+			KillTimer(hWnd, 1);
+		}
+		DeleteObject(hbrush);
+		DeleteObject(hpen);
+		DeleteObject(spriteBitmap);
 		PostQuitMessage(0);
 		break;	
 	default:
